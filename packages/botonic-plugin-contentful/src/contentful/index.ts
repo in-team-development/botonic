@@ -1,3 +1,4 @@
+import { CacheDelivery } from './cache';
 import { FollowUpDelivery } from './followUp';
 import { CallbackMap } from '../cms';
 import { ButtonDelivery } from './button';
@@ -14,8 +15,11 @@ export default class Contentful implements cms.CMS {
 
   _url: UrlDelivery;
 
+  cache: CacheDelivery;
+
   constructor(spaceId: string, accessToken: string, timeoutMs: number = 30000) {
     let delivery = new DeliveryApi(spaceId, accessToken, timeoutMs);
+    this.cache = new CacheDelivery(delivery);
     let button = new ButtonDelivery(delivery);
     this._carousel = new CarouselDelivery(delivery, button);
     this._text = new TextDelivery(delivery, button);

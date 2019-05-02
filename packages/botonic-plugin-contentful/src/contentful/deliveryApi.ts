@@ -46,6 +46,10 @@ export class DeliveryApi {
     return this.client.getEntry<T>(id);
   }
 
+  async getEntries<T>(): Promise<EntryCollection<T>> {
+    return this.client.getEntries();
+  }
+
   static getContentModel<T>(entry: contentful.Entry<T>): ModelType {
     // https://blog.oio.de/2014/02/28/typescript-accessing-enum-values-via-a-string/
     const typ = entry.sys.contentType.sys.id;

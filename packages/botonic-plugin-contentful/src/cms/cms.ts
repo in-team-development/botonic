@@ -171,4 +171,13 @@ export class DummyCMS implements CMS {
   url(id: string): Promise<Url> {
     return Promise.resolve(new Url(`http://url.${id}`));
   }
+
+  nameMap(): Promise<NameMap> {
+    let map = new Map<string, string>();
+    this.buttonCallbacks.map((callback: Callback) => {
+      let id = callback.payload || callback.url!;
+      map.set(id, id);
+    });
+    return Promise.resolve(new NameMap(map));
+  }
 }
