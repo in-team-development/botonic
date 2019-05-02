@@ -50,8 +50,9 @@ export class App {
 }
 
 export interface Input {
-  payload: string;
-  type: string; // text, ...
+  type: string; // text, postback...
+  payload?: string;
+  data?: string;
 }
 
 // Parameters of the actions' botonicInit method
