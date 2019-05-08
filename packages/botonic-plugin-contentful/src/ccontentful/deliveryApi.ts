@@ -1,4 +1,5 @@
-import { ModelType } from '../cms';
+import { Keywords } from './keywords';
+import { ModelType } from '@contentful/cms';
 import * as contentful from 'contentful';
 
 export class DeliveryApi {
@@ -44,6 +45,10 @@ export class DeliveryApi {
 
   async getEntry<T>(id: string): Promise<contentful.Entry<T>> {
     return this.client.getEntry<T>(id);
+  }
+
+  async getKeywords(): Promise<Keywords> {
+    return new Keywords();
   }
 
   static getContentModel<T>(entry: contentful.Entry<T>): ModelType {

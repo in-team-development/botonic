@@ -5,12 +5,12 @@
     "**/*.tsx"
   ],
   "compilerOptions": {
-    "baseUrl": "src",
+    "baseUrl": "../src",
     "paths": {
+      "@contentful/*" : ["./*"],
       "*": [
         "../src/*",
-        "../lib/src/*",
-        "../types/*"
+        "../lib/src/*"
       ]
     },
 //    "rootDir": "../src",

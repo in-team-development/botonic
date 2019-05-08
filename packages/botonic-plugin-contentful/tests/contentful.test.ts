@@ -1,4 +1,4 @@
-import Contentful from '../src/contentful';
+import Contentful from '@contentful/ccontentful';
 import { mock } from 'ts-mockito';
 import * as cms from '../src';
 

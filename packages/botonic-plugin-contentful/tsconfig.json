@@ -7,10 +7,10 @@
   "compilerOptions": {
     "baseUrl": "src",
     "paths": {
+      "@contentful/*" : ["./*"],
       "*": [
         "src/*",
-        "lib/src/*",
-        "types/*"
+        "lib/src/*"
       ]
     },
     "rootDir": "src",

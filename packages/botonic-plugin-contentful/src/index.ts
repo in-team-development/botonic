@@ -1,4 +1,4 @@
-import Contentful from './contentful';
+import Contentful from '@contentful/ccontentful';
 import { CMS, ErrorReportingCMS } from './cms';
 import { Renderer } from './render';
 
