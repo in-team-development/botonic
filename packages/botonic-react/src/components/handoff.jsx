@@ -1,5 +1,30 @@
 import React, { useState, useContext } from 'react'
 import { WebchatContext } from '../contexts'
+import styled from 'styled-components'
+
+const HandoffStyled = styled.div`
+  display: flex;
+  color: ${props => props.fontColor};
+  fontfamily: Arial, Helvetica, sans-serif;
+  flexdirection: column;
+  justifycontent: center;
+  alignitems: center;
+  padding: 24px;
+  background-color: ${props => props.bgColor};
+`
+const HandoffResponse = styled.div`
+  text-align: center;
+  white-space: normal;
+`
+const HandoffButton = styled.button`
+  max-width: 60%;
+  padding: 12px 24px;
+  background-color: white;
+  border: none;
+  border-radius: 4;
+  margin-top: 8;
+  cursor: pointer;
+`
 
 export const Handoff = props => {
   const { resolveCase } = useContext(WebchatContext)
@@ -12,44 +37,19 @@ export const Handoff = props => {
 
   let bgColor = state.showContinue ? '#c6e7c0' : '#d1d8cf'
   let fontColor = state.showContinue ? '#3a9c35' : '#5f735e'
+  console.log(bgColor)
   return (
-    <div
-      style={{
-        display: 'flex',
-        color: fontColor,
-        fontFamily: 'Arial, Helvetica, sans-serif',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 24,
-        backgroundColor: bgColor
-      }}
-    >
+    <HandoffStyled bgColor={bgColor} fontColor={fontColor}>
       {state.showContinue ? (
-        <div style={{ textAlign: 'center', whiteSpace: 'normal' }}>
+        <HandoffResponse>
           Conversation transferred to a human agent...
-        </div>
+        </HandoffResponse>
       ) : (
-        <div style={{ textAlign: 'center', whiteSpace: 'normal' }}>
-          Human handoff ended
-        </div>
+        <HandoffResponse>Human handoff ended</HandoffResponse>
       )}
       {state.showContinue && (
-        <button
-          style={{
-            maxWidth: '60%',
-            padding: '12px 24px',
-            backgroundColor: 'white',
-            border: 'none',
-            borderRadius: 4,
-            marginTop: 8,
-            cursor: 'pointer'
-          }}
-          onClick={continueClick}
-        >
-          Continue
-        </button>
+        <HandoffButton onClick={continueClick}>Continue</HandoffButton>
       )}
-    </div>
+    </HandoffStyled>
   )
 }
