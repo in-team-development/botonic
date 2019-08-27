@@ -79,11 +79,7 @@ const Subtitle = styled.h1`
   color: #ffffff;
 `
 const Diffuse = styled(Flex)`
-<<<<<<< HEAD
   background: linear-gradient(90deg, #2e203b 0%, ${props => props.color} 100%);
-=======
-  background: linear-gradient(90deg, #2e203b 0%, ${props => props.colorr} 100%);
->>>>>>> 9316232e7a162b399ad1a63a33cc335f0c239111
   width: 1;
   height: 55px;
   border-radius: 6px 6px 0px 0px;
@@ -101,7 +97,7 @@ export const DefaultHeader = props => (
         src={Logo}
       />
     </Flex>
-    <Flex width={1} flexDirection="column">
+    <Flex width={1} flexDirection='column'>
       <HeaderTitle>Botonic</HeaderTitle>
       <Subtitle>Online</Subtitle>
     </Flex>
