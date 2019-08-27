@@ -25,10 +25,8 @@ import { WebviewContainer } from './webview'
 import { isDev, msgToBotonic } from '../utils'
 import Logo from './botonic_react_logo100x100.png'
 import EmojiPicker from 'emoji-picker-react'
-<<<<<<< HEAD
 import LogoMenu from './menuButton.svg'
 import { Button } from '../components/button'
-=======
 import styled from 'styled-components'
 
 const WebchatStyled = styled.div`
@@ -58,7 +56,6 @@ const TriggerButtonStyled = styled.div`
   bottom: 20px;
   right: 10px;
 `
->>>>>>> add: webchat && webview with styled-components
 
 const getScriptBaseURL = () => {
   let scriptBaseURL = document

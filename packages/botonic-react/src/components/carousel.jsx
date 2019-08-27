@@ -39,7 +39,7 @@ export const Carousel = props => {
       style={{ maxWidth: '90%', padding: 0 }}
       blob={false}
       json={serialize(props)}
-      type='carousel'
+      type="carousel"
       {...props}
     >
       {content}
