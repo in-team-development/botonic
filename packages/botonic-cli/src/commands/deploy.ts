@@ -5,6 +5,7 @@ import * as colors from 'colors'
 const fs = require('fs')
 const ora = require('ora')
 const util = require('util')
+const zip = require('bestzip')
 const exec = util.promisify(require('child_process').exec)
 
 import { BotonicAPIService } from '../botonicAPIService'
@@ -268,8 +269,12 @@ Uploading...
       text: 'Creating bundle...',
       spinner: 'bouncingBar'
     }).start()
-    let zip_cmd = `zip -r botonic_bundle.zip dist`
-    let zip_out = await exec(zip_cmd)
+    //let zip_cmd = `zip -r botonic_bundle.zip dist`
+    const zip_out = zip({
+    	source: 'dist/*',
+	destination: './botonic_bundle.zip'
+    })
+    //let zip_out = await exec(zip_cmd)
     const zip_stats = fs.statSync('botonic_bundle.zip')
     spinner.succeed()
     if (zip_stats.size >= 10 * 10 ** 6) {
