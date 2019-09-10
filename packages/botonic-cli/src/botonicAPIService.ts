@@ -1,7 +1,7 @@
 import { join, resolve } from 'path'
 import * as fs from 'fs'
 import { homedir } from 'os'
-import axios from 'axios'
+import axios, {Method} from 'axios'
 import * as colors from 'colors'
 const FormData = require('form-data')
 const util = require('util')
@@ -152,7 +152,7 @@ export class BotonicAPIService {
   async api(
     path: string,
     body: any = null,
-    method: string = 'get',
+    method: Method = 'get',
     headers: any | null = null,
     params: any = null
   ): Promise<any> {

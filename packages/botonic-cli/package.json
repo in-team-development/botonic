@@ -16,6 +16,7 @@
     "folder-hash": "^3.0.0",
     "form-data": "^2.3.2",
     "inquirer": "^6.3.1",
+    "ncp": "^2.0.0",
     "ora": "^3.0.0",
     "tslib": "^1"
   },
@@ -55,7 +56,7 @@
   },
   "repository": "hubtype/botonic",
   "scripts": {
-    "build": "rm -rf lib && tsc",
+    "build": "rimraf lib && tsc",
     "postpack": "rm -f oclif.manifest.json npm-shrinkwrap.json",
     "posttest": "tslint -p test -t stylish",
     "prepack": "oclif-dev manifest && oclif-dev readme && npm shrinkwrap",
