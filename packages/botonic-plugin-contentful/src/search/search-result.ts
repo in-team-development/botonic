@@ -19,7 +19,8 @@ export class SearchResult {
     readonly shortText?: string,
     readonly keywords: string[] = [],
     readonly priority = PRIORITY_MAX,
-    readonly score = SCORE_MAX
+    readonly score = SCORE_MAX,
+    readonly match?: string
   ) {}
 
   toButton(): Button {
