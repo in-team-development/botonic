@@ -9,8 +9,6 @@ import { track } from '../utils'
 const util = require('util')
 const ora = require('ora')
 const exec = util.promisify(require('child_process').exec)
-const fs = require('fs')
-const ncp = require('ncp').ncp
 const fsExtra = require('fs-extra')
 
 export default class Run extends Command {

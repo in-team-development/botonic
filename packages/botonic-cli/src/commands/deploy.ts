@@ -289,11 +289,7 @@ Uploading...
         )
       )
       track('Deploy Botonic Zip Error')
-      fsExtra.remove('botonic_bundle.zip', (err) => {
-        if(err) {
-          console.log('Error during removing botonic_bundle.zip')
-        }
-      })
+      fsExtra.remove('botonic_bundle.zip').catch(err => console.log(err))
       return
     }
     spinner = new ora({
@@ -338,11 +334,7 @@ Uploading...
       console.log(colors.red('There was a problem in the deploy:'))
       console.log(err)
       track('Deploy Botonic Error', { error: err })
-      fsExtra.remove('botonic_bundle.zip', (err) => {
-        if(err) {
-          console.log('Error during removing botonic_bundle.zip')
-        }
-      })
+      fsExtra.remove('botonic_bundle.zip').catch(err => console.log(err))
       return
     }
     try {
@@ -363,7 +355,7 @@ Uploading...
       console.log(colors.red(`There was an error getting the providers: ${e}`))
     }
     try {
-      fsExtra.remove('botonic_bundle.zip')
+      await fsExtra.remove('botonic_bundle.zip')
     } catch(err) {
       console.log(err)
     }
