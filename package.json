@@ -1,7 +1,5 @@
 {
   "private": true,
-  "name": "botonic",
-  "version": "1.0.0",
   "devDependencies": {
     "@types/node": "^12.0.3",
     "lerna": "^3.4.0",
