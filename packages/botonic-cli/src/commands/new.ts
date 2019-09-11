@@ -1,7 +1,7 @@
 import { Command } from '@oclif/command'
 import { resolve } from 'path'
-import { prompt } from 'inquirer'
 import * as colors from 'colors'
+import { prompt } from 'inquirer'
 
 import { BotonicAPIService } from '../botonicAPIService'
 import { track } from '../utils'
@@ -71,7 +71,7 @@ Creating...
 
   async run() {
     track('Created Botonic Bot CLI')
-    const { args, flags } = this.parse(Run)
+    const { args } = this.parse(Run)
     let template = ''
     if (!args.templateName) {
       await this.selectBotName().then((resp: any) => {
@@ -86,7 +86,6 @@ Creating...
       if (botExists.length) {
         template = args.templateName
       } else {
-        let template_names = this.templates.map((t: any) => t.name)
         console.log(
           colors.red(
             'Template ${args.templateName} does not exist, please choose one of ${template_names}.'
@@ -95,7 +94,6 @@ Creating...
         return
       }
     }
-    let botPath = resolve(template)
     let templatePath = `${__dirname}/../../templates/${template}`
     let spinner = new ora({
       text: 'Copying files...',

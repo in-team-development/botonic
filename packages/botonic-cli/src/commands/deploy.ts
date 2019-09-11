@@ -10,10 +10,10 @@ const zip = require('bestzip')
 const exec = util.promisify(require('child_process').exec)
 
 import { BotonicAPIService } from '../botonicAPIService'
-import { track, sleep } from '../utils'
+import { sleep, track } from '../utils'
 
-var force = false
-var npmCommand: string | undefined
+let force = false
+let npmCommand: string | undefined
 
 export default class Run extends Command {
   static description = 'Deploy Botonic project to hubtype.com'
@@ -40,10 +40,10 @@ Uploading...
 
   static args = [{ name: 'bot_name' }]
 
-  private botonicApiService: BotonicAPIService = new BotonicAPIService()
+  private readonly botonicApiService: BotonicAPIService = new BotonicAPIService()
 
   async run() {
-    const { args, flags } = this.parse(Run)
+    const { flags } = this.parse(Run)
     track('Deployed Botonic CLI')
 
     force = flags.force ? flags.force : false
@@ -52,7 +52,7 @@ Uploading...
 
     if (!this.botonicApiService.oauth) await this.signupFlow()
     else if (botName) {
-      this.deployBotFromFlag(botName)
+      await this.deployBotFromFlag(botName)
     } else await this.deployBotFlow()
   }
 
@@ -64,13 +64,13 @@ Uploading...
       await this.botonicApiService.getMoreBots(bots, nextBots)
     }
     let bot = bots.filter(b => b.name === botName)[0]
-    if (bot == undefined) {
+    if (bot === undefined) {
       console.log(colors.red(`Bot ${botName} doesn't exist.`))
       console.log('\nThese are the available options:')
       bots.map(b => console.log(` > ${b.name}`))
     } else {
       this.botonicApiService.setCurrentBot(bot)
-      this.deploy()
+      await this.deploy()
     }
   }
 
@@ -85,10 +85,10 @@ Uploading...
         name: 'signupConfirmation',
         message:
           'You need to login before deploying your bot.\nDo you have a Hubtype account already?',
-        choices: choices
+        choices
       }
     ]).then((inp: any) => {
-      if (inp.signupConfirmation == choices[1]) return this.askLogin()
+      if (inp.signupConfirmation === choices[1]) return this.askLogin()
       else return this.askSignup()
     })
   }
@@ -122,8 +122,9 @@ Uploading...
   }
 
   async deployBotFlow() {
-    if (!this.botonicApiService.bot) return this.newBotFlow()
-    else {
+    if (!this.botonicApiService.bot) {
+      return this.newBotFlow()
+    } else {
       let resp = await this.botonicApiService.getBots()
       let nextBots = resp.data.next
       let bots = resp.data.results
@@ -133,7 +134,7 @@ Uploading...
       // Show the current bot in credentials at top of the list
       let first_id = this.botonicApiService.bot.id
       bots.sort(function(x, y) {
-        return x.id == first_id ? -1 : y.id == first_id ? 1 : 0
+        return x.id === first_id ? -1 : y.id === first_id ? 1 : 0
       })
       return this.selectExistentBot(bots)
     }
@@ -271,7 +272,7 @@ Uploading...
       spinner: 'bouncingBar'
     }).start()
     try {
-       await zip({
+      await zip({
         source: 'dist/*',
         destination: './botonic_bundle.zip'
       })
@@ -297,7 +298,7 @@ Uploading...
       spinner: 'bouncingBar'
     }).start()
     try {
-      var deploy = await this.botonicApiService.deployBot(
+      let deploy = await this.botonicApiService.deployBot(
         'botonic_bundle.zip',
         force
       )
@@ -348,7 +349,7 @@ Uploading...
         }`
         console.log(links)
       } else {
-        this.displayProviders(providers)
+        await this.displayProviders(providers)
       }
     } catch (e) {
       track('Deploy Botonic Provider Error', { error: e })
