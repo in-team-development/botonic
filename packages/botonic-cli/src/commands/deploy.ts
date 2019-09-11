@@ -3,6 +3,7 @@ import { prompt } from 'inquirer'
 import * as colors from 'colors'
 
 const fs = require('fs')
+const fsExtra = require('fs-extra')
 const ora = require('ora')
 const util = require('util')
 const zip = require('bestzip')
@@ -269,10 +270,15 @@ Uploading...
       text: 'Creating bundle...',
       spinner: 'bouncingBar'
     }).start()
-    const zip_out = zip({
-    	source: 'dist/*',
-	destination: './botonic_bundle.zip'
-    })
+    try {
+       await zip({
+        source: 'dist/*',
+        destination: './botonic_bundle.zip'
+      })
+    } catch(err) {
+      console.log(err)
+      return
+    }
     const zip_stats = fs.statSync('botonic_bundle.zip')
     spinner.succeed()
     if (zip_stats.size >= 10 * 10 ** 6) {
@@ -283,7 +289,11 @@ Uploading...
         )
       )
       track('Deploy Botonic Zip Error')
-      await exec('rm botonic_bundle.zip')
+      fsExtra.remove('botonic_bundle.zip', (err) => {
+        if(err) {
+          console.log('Error during removing botonic_bundle.zip')
+        }
+      })
       return
     }
     spinner = new ora({
@@ -318,7 +328,7 @@ Uploading...
             console.log(colors.red('There was a problem in the deploy:'))
             console.log(deploy_status.data.error)
             track('Deploy Botonic Error', { error: deploy_status.data.error })
-            await exec('rm botonic_bundle.zip')
+            await fsExtra.remove('botonic_bundle.zip')
             return
           }
         }
@@ -328,7 +338,11 @@ Uploading...
       console.log(colors.red('There was a problem in the deploy:'))
       console.log(err)
       track('Deploy Botonic Error', { error: err })
-      await exec('rm botonic_bundle.zip')
+      fsExtra.remove('botonic_bundle.zip', (err) => {
+        if(err) {
+          console.log('Error during removing botonic_bundle.zip')
+        }
+      })
       return
     }
     try {
@@ -349,8 +363,10 @@ Uploading...
       console.log(colors.red(`There was an error getting the providers: ${e}`))
     }
     try {
-      await exec('rm botonic_bundle.zip')
-    } catch (e) {}
+      fsExtra.remove('botonic_bundle.zip')
+    } catch(err) {
+      console.log(err)
+    }
     this.botonicApiService.beforeExit()
   }
 }

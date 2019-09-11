@@ -11,6 +11,7 @@ const ora = require('ora')
 const exec = util.promisify(require('child_process').exec)
 const fs = require('fs')
 const ncp = require('ncp').ncp
+const fsExtra = require('fs-extra')
 
 export default class Run extends Command {
   static description = 'Create a new Botonic project'
@@ -102,11 +103,12 @@ Creating...
       text: 'Copying files...',
       spinner: 'bouncingBar'
     }).start()
-    await ncp(`${templatePath}`, `${args.name}`, (err) => {
-      if(err) {
-        throw err;
-      }
-    })
+    try {
+      await fsExtra.copy(`${templatePath}`, `${args.name}`)
+    } catch (err) {
+      console.log(err)
+      return
+    }
     spinner.succeed()
     process.chdir(args.name)
     spinner = new ora({
@@ -118,11 +120,12 @@ Creating...
     spinner.succeed()
     await this.botonicApiService.buildIfChanged(false)
     this.botonicApiService.beforeExit()
-    await fs.rename('../.botonic.json', './botonic.json', (err) => {
-      if(err) {
-        throw err;
-      }
-    });
+    try {
+      await fsExtra.move('../.botonic.json', './botonic.json')
+    } catch (err) {
+      console.log(err)
+      return
+    }
     let cd_cmd = colors.bold(`cd ${args.name}`)
     let run_cmd = colors.bold('botonic serve')
     let deploy_cmd = colors.bold('botonic deploy')
