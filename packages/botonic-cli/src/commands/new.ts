@@ -102,7 +102,7 @@ Creating...
     try {
       await fsExtra.copy(`${templatePath}`, `${args.name}`)
     } catch (err) {
-      console.log(err)
+      console.log(colors.red(err))
       return
     }
     spinner.succeed()
@@ -119,7 +119,7 @@ Creating...
     try {
       await fsExtra.move('../.botonic.json', './botonic.json')
     } catch (err) {
-      console.log(err)
+      console.log(colors.red(err))
       return
     }
     let cd_cmd = colors.bold(`cd ${args.name}`)

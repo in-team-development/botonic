@@ -277,7 +277,7 @@ Uploading...
         destination: './botonic_bundle.zip'
       })
     } catch(err) {
-      console.log(err)
+      console.log(colors.red(err))
       return
     }
     const zip_stats = fs.statSync('botonic_bundle.zip')
@@ -290,7 +290,7 @@ Uploading...
         )
       )
       track('Deploy Botonic Zip Error')
-      fsExtra.remove('botonic_bundle.zip').catch(err => console.log(err))
+      fsExtra.remove('botonic_bundle.zip').catch(err => console.log(colors.red(err)))
       return
     }
     spinner = new ora({
@@ -335,7 +335,7 @@ Uploading...
       console.log(colors.red('There was a problem in the deploy:'))
       console.log(err)
       track('Deploy Botonic Error', { error: err })
-      fsExtra.remove('botonic_bundle.zip').catch(err => console.log(err))
+      fsExtra.remove('botonic_bundle.zip').catch(err => console.log(colors.red(err)))
       return
     }
     try {
@@ -358,7 +358,7 @@ Uploading...
     try {
       await fsExtra.remove('botonic_bundle.zip')
     } catch(err) {
-      console.log(err)
+      console.log(colors.red(err))
     }
     this.botonicApiService.beforeExit()
   }
