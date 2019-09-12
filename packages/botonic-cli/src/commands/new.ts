@@ -1,7 +1,7 @@
 import { Command } from '@oclif/command'
 import { resolve } from 'path'
-import { prompt } from 'inquirer'
 import * as colors from 'colors'
+import { prompt } from 'inquirer'
 
 import { BotonicAPIService } from '../botonicAPIService'
 import { track } from '../utils'
@@ -9,6 +9,7 @@ import { track } from '../utils'
 const util = require('util')
 const ora = require('ora')
 const exec = util.promisify(require('child_process').exec)
+const fsExtra = require('fs-extra')
 
 export default class Run extends Command {
   static description = 'Create a new Botonic project'
@@ -70,7 +71,7 @@ Creating...
 
   async run() {
     track('Created Botonic Bot CLI')
-    const { args, flags } = this.parse(Run)
+    const { args } = this.parse(Run)
     let template = ''
     if (!args.templateName) {
       await this.selectBotName().then((resp: any) => {
@@ -85,7 +86,6 @@ Creating...
       if (botExists.length) {
         template = args.templateName
       } else {
-        let template_names = this.templates.map((t: any) => t.name)
         console.log(
           colors.red(
             'Template ${args.templateName} does not exist, please choose one of ${template_names}.'
@@ -94,14 +94,17 @@ Creating...
         return
       }
     }
-    let botPath = resolve(template)
     let templatePath = `${__dirname}/../../templates/${template}`
     let spinner = new ora({
       text: 'Copying files...',
       spinner: 'bouncingBar'
     }).start()
-    let copyFolderCommand = `cp -r ${templatePath} ${args.name}`
-    let copy_out = await exec(copyFolderCommand)
+    try {
+      await fsExtra.copy(`${templatePath}`, `${args.name}`)
+    } catch (err) {
+      console.log(err)
+      return
+    }
     spinner.succeed()
     process.chdir(args.name)
     spinner = new ora({
@@ -113,7 +116,12 @@ Creating...
     spinner.succeed()
     await this.botonicApiService.buildIfChanged(false)
     this.botonicApiService.beforeExit()
-    await exec('mv ../.botonic.json .')
+    try {
+      await fsExtra.move('../.botonic.json', './botonic.json')
+    } catch (err) {
+      console.log(err)
+      return
+    }
     let cd_cmd = colors.bold(`cd ${args.name}`)
     let run_cmd = colors.bold('botonic serve')
     let deploy_cmd = colors.bold('botonic deploy')

@@ -3,15 +3,17 @@ import { prompt } from 'inquirer'
 import * as colors from 'colors'
 
 const fs = require('fs')
+const fsExtra = require('fs-extra')
 const ora = require('ora')
 const util = require('util')
+const zip = require('bestzip')
 const exec = util.promisify(require('child_process').exec)
 
 import { BotonicAPIService } from '../botonicAPIService'
-import { track, sleep } from '../utils'
+import { sleep, track } from '../utils'
 
-var force = false
-var npmCommand: string | undefined
+let force = false
+let npmCommand: string | undefined
 
 export default class Run extends Command {
   static description = 'Deploy Botonic project to hubtype.com'
@@ -38,10 +40,10 @@ Uploading...
 
   static args = [{ name: 'bot_name' }]
 
-  private botonicApiService: BotonicAPIService = new BotonicAPIService()
+  private readonly botonicApiService: BotonicAPIService = new BotonicAPIService()
 
   async run() {
-    const { args, flags } = this.parse(Run)
+    const { flags } = this.parse(Run)
     track('Deployed Botonic CLI')
 
     force = flags.force ? flags.force : false
@@ -50,7 +52,7 @@ Uploading...
 
     if (!this.botonicApiService.oauth) await this.signupFlow()
     else if (botName) {
-      this.deployBotFromFlag(botName)
+      await this.deployBotFromFlag(botName)
     } else await this.deployBotFlow()
   }
 
@@ -62,13 +64,13 @@ Uploading...
       await this.botonicApiService.getMoreBots(bots, nextBots)
     }
     let bot = bots.filter(b => b.name === botName)[0]
-    if (bot == undefined) {
+    if (bot === undefined) {
       console.log(colors.red(`Bot ${botName} doesn't exist.`))
       console.log('\nThese are the available options:')
       bots.map(b => console.log(` > ${b.name}`))
     } else {
       this.botonicApiService.setCurrentBot(bot)
-      this.deploy()
+      await this.deploy()
     }
   }
 
@@ -83,10 +85,10 @@ Uploading...
         name: 'signupConfirmation',
         message:
           'You need to login before deploying your bot.\nDo you have a Hubtype account already?',
-        choices: choices
+        choices
       }
     ]).then((inp: any) => {
-      if (inp.signupConfirmation == choices[1]) return this.askLogin()
+      if (inp.signupConfirmation === choices[1]) return this.askLogin()
       else return this.askSignup()
     })
   }
@@ -120,8 +122,9 @@ Uploading...
   }
 
   async deployBotFlow() {
-    if (!this.botonicApiService.bot) return this.newBotFlow()
-    else {
+    if (!this.botonicApiService.bot) {
+      return this.newBotFlow()
+    } else {
       let resp = await this.botonicApiService.getBots()
       let nextBots = resp.data.next
       let bots = resp.data.results
@@ -131,7 +134,7 @@ Uploading...
       // Show the current bot in credentials at top of the list
       let first_id = this.botonicApiService.bot.id
       bots.sort(function(x, y) {
-        return x.id == first_id ? -1 : y.id == first_id ? 1 : 0
+        return x.id === first_id ? -1 : y.id === first_id ? 1 : 0
       })
       return this.selectExistentBot(bots)
     }
@@ -268,8 +271,15 @@ Uploading...
       text: 'Creating bundle...',
       spinner: 'bouncingBar'
     }).start()
-    let zip_cmd = `zip -r botonic_bundle.zip dist`
-    let zip_out = await exec(zip_cmd)
+    try {
+      await zip({
+        source: 'dist/*',
+        destination: './botonic_bundle.zip'
+      })
+    } catch(err) {
+      console.log(err)
+      return
+    }
     const zip_stats = fs.statSync('botonic_bundle.zip')
     spinner.succeed()
     if (zip_stats.size >= 10 * 10 ** 6) {
@@ -280,7 +290,7 @@ Uploading...
         )
       )
       track('Deploy Botonic Zip Error')
-      await exec('rm botonic_bundle.zip')
+      fsExtra.remove('botonic_bundle.zip').catch(err => console.log(err))
       return
     }
     spinner = new ora({
@@ -288,7 +298,7 @@ Uploading...
       spinner: 'bouncingBar'
     }).start()
     try {
-      var deploy = await this.botonicApiService.deployBot(
+      let deploy = await this.botonicApiService.deployBot(
         'botonic_bundle.zip',
         force
       )
@@ -315,7 +325,7 @@ Uploading...
             console.log(colors.red('There was a problem in the deploy:'))
             console.log(deploy_status.data.error)
             track('Deploy Botonic Error', { error: deploy_status.data.error })
-            await exec('rm botonic_bundle.zip')
+            await fsExtra.remove('botonic_bundle.zip')
             return
           }
         }
@@ -325,7 +335,7 @@ Uploading...
       console.log(colors.red('There was a problem in the deploy:'))
       console.log(err)
       track('Deploy Botonic Error', { error: err })
-      await exec('rm botonic_bundle.zip')
+      fsExtra.remove('botonic_bundle.zip').catch(err => console.log(err))
       return
     }
     try {
@@ -339,15 +349,17 @@ Uploading...
         }`
         console.log(links)
       } else {
-        this.displayProviders(providers)
+        await this.displayProviders(providers)
       }
     } catch (e) {
       track('Deploy Botonic Provider Error', { error: e })
       console.log(colors.red(`There was an error getting the providers: ${e}`))
     }
     try {
-      await exec('rm botonic_bundle.zip')
-    } catch (e) {}
+      await fsExtra.remove('botonic_bundle.zip')
+    } catch(err) {
+      console.log(err)
+    }
     this.botonicApiService.beforeExit()
   }
 }
