@@ -5,7 +5,8 @@
     "lerna": "^3.4.0",
     "ts-node": "5",
     "tslib": "^1.9.0",
-    "typescript": "^3.5.3"
+    "typescript": "^3.5.3",
+    "rimraf": "^3.0.0"
   },
   "engines": {
     "node": ">=8.0.0"
@@ -19,8 +20,5 @@
   },
   "workspaces": [
     "packages/*"
-  ],
-  "dependencies": {
-    "rimraf": "^3.0.0"
-  }
+  ]
 }

@@ -2,15 +2,12 @@ import { Command, flags } from '@oclif/command'
 import { prompt } from 'inquirer'
 import * as colors from 'colors'
 
-const fs = require('fs')
-const fsExtra = require('fs-extra')
-const ora = require('ora')
-const util = require('util')
-const zip = require('bestzip')
-const exec = util.promisify(require('child_process').exec)
-
 import { BotonicAPIService } from '../botonicAPIService'
 import { sleep, track } from '../utils'
+
+const fs = require('fs-extra')
+const ora = require('ora')
+const zip = require('bestzip')
 
 let force = false
 let npmCommand: string | undefined
@@ -64,13 +61,13 @@ Uploading...
       await this.botonicApiService.getMoreBots(bots, nextBots)
     }
     let bot = bots.filter(b => b.name === botName)[0]
-    if (bot === undefined) {
+    if (bot) {
+      this.botonicApiService.setCurrentBot(bot)
+      await this.deploy()
+    } else {
       console.log(colors.red(`Bot ${botName} doesn't exist.`))
       console.log('\nThese are the available options:')
       bots.map(b => console.log(` > ${b.name}`))
-    } else {
-      this.botonicApiService.setCurrentBot(bot)
-      await this.deploy()
     }
   }
 
@@ -88,8 +85,7 @@ Uploading...
         choices
       }
     ]).then((inp: any) => {
-      if (inp.signupConfirmation === choices[1]) return this.askLogin()
-      else return this.askSignup()
+      return inp.signupConfirmation === choices[1] ? this.askLogin() : this.askSignup()
     })
   }
 
@@ -132,10 +128,8 @@ Uploading...
         await this.botonicApiService.getMoreBots(bots, nextBots)
       }
       // Show the current bot in credentials at top of the list
-      let first_id = this.botonicApiService.bot.id
-      bots.sort(function(x, y) {
-        return x.id === first_id ? -1 : y.id === first_id ? 1 : 0
-      })
+      let firstId = this.botonicApiService.bot.id
+      bots.sort((x, y) => x.id === firstId ? -1 : y.id === firstId ? 1 : 0)
       return this.selectExistentBot(bots)
     }
   }
@@ -290,7 +284,7 @@ Uploading...
         )
       )
       track('Deploy Botonic Zip Error')
-      fsExtra.remove('botonic_bundle.zip').catch(err => console.log(colors.red(err)))
+      fs.remove('botonic_bundle.zip').catch(err => console.log(colors.red(err)))
       return
     }
     spinner = new ora({
@@ -325,7 +319,7 @@ Uploading...
             console.log(colors.red('There was a problem in the deploy:'))
             console.log(deploy_status.data.error)
             track('Deploy Botonic Error', { error: deploy_status.data.error })
-            await fsExtra.remove('botonic_bundle.zip')
+            await fs.remove('botonic_bundle.zip')
             return
           }
         }
@@ -335,7 +329,7 @@ Uploading...
       console.log(colors.red('There was a problem in the deploy:'))
       console.log(err)
       track('Deploy Botonic Error', { error: err })
-      fsExtra.remove('botonic_bundle.zip').catch(err => console.log(colors.red(err)))
+      fs.remove('botonic_bundle.zip').catch(err => console.log(colors.red(err)))
       return
     }
     try {
@@ -356,7 +350,7 @@ Uploading...
       console.log(colors.red(`There was an error getting the providers: ${e}`))
     }
     try {
-      await fsExtra.remove('botonic_bundle.zip')
+      await fs.remove('botonic_bundle.zip')
     } catch(err) {
       console.log(colors.red(err))
     }

@@ -1,5 +1,4 @@
 import { Command } from '@oclif/command'
-import { resolve } from 'path'
 import * as colors from 'colors'
 import { prompt } from 'inquirer'
 
@@ -9,7 +8,7 @@ import { track } from '../utils'
 const util = require('util')
 const ora = require('ora')
 const exec = util.promisify(require('child_process').exec)
-const fsExtra = require('fs-extra')
+const fs = require('fs-extra')
 
 export default class Run extends Command {
   static description = 'Create a new Botonic project'
@@ -86,9 +85,10 @@ Creating...
       if (botExists.length) {
         template = args.templateName
       } else {
+        const templateNames = this.templates.map(t => t.name)
         console.log(
           colors.red(
-            'Template ${args.templateName} does not exist, please choose one of ${template_names}.'
+            `Template ${args.templateName} does not exist, please choose one of ${templateNames}.`
           )
         )
         return
@@ -100,7 +100,7 @@ Creating...
       spinner: 'bouncingBar'
     }).start()
     try {
-      await fsExtra.copy(`${templatePath}`, `${args.name}`)
+      await fs.copy(`${templatePath}`, `${args.name}`)
     } catch (err) {
       console.log(colors.red(err))
       return
@@ -117,7 +117,7 @@ Creating...
     await this.botonicApiService.buildIfChanged(false)
     this.botonicApiService.beforeExit()
     try {
-      await fsExtra.move('../.botonic.json', './botonic.json')
+      await fs.move('../.botonic.json', './.botonic.json')
     } catch (err) {
       console.log(colors.red(err))
       return
