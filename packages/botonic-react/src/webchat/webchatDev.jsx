@@ -28,8 +28,6 @@ export const WebchatDev = forwardRef((props, ref) => {
   useEffect(
     () =>
       updateTheme({
-        ...webchatState.theme,
-        ...props.theme,
         style: {
           position: 'absolute',
           right: 0,
@@ -37,7 +35,9 @@ export const WebchatDev = forwardRef((props, ref) => {
         },
         triggerButtonStyle: {
           position: 'absolute'
-        }
+        },
+        ...webchatState.theme,
+        ...props.theme
       }),
     [props.theme]
   )
@@ -85,11 +85,11 @@ export const WebchatDev = forwardRef((props, ref) => {
             showSessionView: false
           }}
         />
-        {webchatState.isWebchatOpen && !webchatState.theme.customHeader && (
+        {webchatState.isWebchatOpen && (
           <div
             style={{
               position: 'absolute',
-              right: 28,
+              right: 32,
               top: 12,
               padding: 5,
               cursor: 'pointer',

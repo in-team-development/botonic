@@ -1,25 +1,67 @@
 import 'jest-extended';
-import { KeywordsParser, tokenizeAndStem } from '../../src/nlp';
-import { MatchType } from '../../src/nlp/keywords';
+import { KeywordsParser, tokenizeAndStem, Tokenizer } from '../../src/nlp';
+import { KeywordsOptions, MatchType } from '../../src/nlp/keywords';
 
 test('hack because webstorm does not recognize test.each', () => {});
 
-function testFindKeywords(locale: string, matchType: MatchType) {
+function testFindKeywords(
+  locale: string,
+  matchType: MatchType,
+  maxDistance = 0
+) {
   return (
     inputText: string,
     keywordsByCandidate: { [index: string]: string[] },
     expectedMatch: string[]
   ) => {
-    const parser = new KeywordsParser(locale, matchType);
+    const parser = new KeywordsParser<string>(
+      locale,
+      matchType,
+      new Tokenizer(),
+      new KeywordsOptions(maxDistance)
+    );
 
     for (const candidate in keywordsByCandidate) {
       parser.addCandidate(candidate, keywordsByCandidate[candidate]);
     }
     const tokens = tokenizeAndStem(locale, inputText);
-    const foundNames = parser.findCandidatesWithKeywordsAt(tokens);
-    expect(foundNames).toIncludeSameMembers(expectedMatch);
+    const results = parser.findCandidatesWithKeywordsAt(tokens);
+    expect(results.map(r => r.candidate)).toIncludeSameMembers(expectedMatch);
   };
 }
+
+test.each<any>([
+  ['quiero realiSar un pedido', { A: ['realizar pedido', 'comprar'] }, ['A']],
+  ['venga realizarpedido', { A: ['realizar pedido', 'comprar'] }, ['A']]
+])(
+  'TEST: find similar keywords of "%s" with KEYWORDS_AND_OTHERS_FOUND',
+  testFindKeywords('es', MatchType.KEYWORDS_AND_OTHERS_FOUND, 1)
+);
+
+test('TEST: results sorted by length with ONLY_KEYWORDS_FOUND', () =>
+  testFindKeywords('es', MatchType.ONLY_KEYWORDS_FOUND, 2)(
+    'abcde',
+    { A: ['abc'], B: ['abXde'] },
+    ['B', 'A']
+  ));
+
+test('TEST: results sorted by length with KEYWORDS_AND_OTHERS_FOUND', () =>
+  testFindKeywords('es', MatchType.KEYWORDS_AND_OTHERS_FOUND, 2)(
+    'words before abcde words after',
+    { A: ['abc'], B: ['abXde'] },
+    ['B', 'A']
+  ));
+
+test.each<any>([
+  // found with multiword keyword
+  ['realizar', { A: ['realizar pedido', 'comprar'] }, []],
+  ['realiSar un pedido', { A: ['realizar pedido', 'comprar'] }, ['A']],
+  ['realizarpedido', { A: ['realizar pedido', 'comprar'] }, ['A']],
+  ['pedido', { A: ['realizar pedido', 'comprar'] }, []]
+])(
+  'TEST: find similar keywords of "%s" with ONLY_KEYWORDS_FOUND',
+  testFindKeywords('es', MatchType.ONLY_KEYWORDS_FOUND, 1)
+);
 
 test.each<any>([
   // found at start with multiword keyword

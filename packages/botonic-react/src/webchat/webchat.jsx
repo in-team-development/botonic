@@ -378,6 +378,9 @@ export const Webchat = forwardRef((props, ref) => {
               height: 36,
               flex: 'none'
             }}
+            onCloseClick={() => {
+              toggleWebchat(false)
+            }}
           />
           <WebchatMessageList
             style={{ flex: 1 }}
@@ -439,7 +442,7 @@ export const Webchat = forwardRef((props, ref) => {
                         marginRight: '8px',
                         cursor: 'pointer'
                       }}
-                      src={LogoMenu}
+                      src={staticAssetsUrl + LogoMenu}
                       onClick={() => handleMenu()}
                     />
                   </div>
@@ -472,11 +475,7 @@ export const Webchat = forwardRef((props, ref) => {
             <RequestContext.Provider value={webviewRequestContext}>
               <WebviewContainer
                 style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  width: '100%',
-                  height: '100%',
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)'
+                  ...props.theme.webviewStyle
                 }}
                 webview={webchatState.webview}
               />
