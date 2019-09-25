@@ -5,7 +5,7 @@ import {
   chitchatContent,
   contentWithKeyword,
   keywordsWithMockCms
-} from './search-contents-from-input.test';
+} from './search-by-keywords.test';
 
 const LOCALE = 'es';
 const CONTEXT = { locale: LOCALE };
@@ -27,7 +27,7 @@ test.each<any>([
       ],
       CONTEXT
     );
-    const tokens = keywords.tokenize(LOCALE, inputText);
+    const tokens = keywords.tokenizer.tokenize(LOCALE, inputText);
     const contents = await keywords.searchContentsFromInput(
       tokens,
       MatchType.KEYWORDS_AND_OTHERS_FOUND,
@@ -54,7 +54,10 @@ test('TEST treatChitChat: chitchat and other keywords detected', async () => {
     ],
     CONTEXT
   );
-  const tokens = keywords.tokenize(LOCALE, 'hey, DevoluciON fuera de  plazo?');
+  const tokens = keywords.tokenizer.tokenize(
+    LOCALE,
+    'hey, DevoluciON fuera de  plazo?'
+  );
   const parsedKeywords = await keywords.searchContentsFromInput(
     tokens,
     MatchType.KEYWORDS_AND_OTHERS_FOUND,
@@ -86,7 +89,7 @@ test.each<any>([
       ],
       CONTEXT
     );
-    const tokens = keywords.tokenize(LOCALE, inputText);
+    const tokens = keywords.tokenizer.tokenize(LOCALE, inputText);
 
     const contents = await keywords.searchContentsFromInput(
       tokens,
@@ -113,7 +116,10 @@ test('TEST treatChitChat: no chitchat detected', async () => {
   );
 
   // hola is a stopword
-  const tokens = keywords.tokenize(LOCALE, 'hola, DevoluciON fuera de  plazo');
+  const tokens = keywords.tokenizer.tokenize(
+    LOCALE,
+    'hola, DevoluciON fuera de  plazo'
+  );
   const contents = await keywords.searchContentsFromInput(
     tokens,
     MatchType.KEYWORDS_AND_OTHERS_FOUND,
@@ -126,4 +132,26 @@ test('TEST treatChitChat: no chitchat detected', async () => {
 
   // assert
   expect(filtered).toBe(contents);
+});
+
+test('TEST treatChitChat: keyword is a stopword', async () => {
+  const keywords = keywordsWithMockCms(
+    [chitchatContent(['hola']), chitchatContent(['buenos dias'])],
+    CONTEXT
+  );
+
+  // hola is a stopword
+  const tokens = keywords.tokenizer.tokenize(LOCALE, 'Hola, buenos días.');
+  const contents = await keywords.searchContentsFromInput(
+    tokens,
+    MatchType.KEYWORDS_AND_OTHERS_FOUND,
+    { locale: LOCALE }
+  );
+  expect(contents).toHaveLength(1);
+
+  // act
+  const filtered = keywords.filterChitchat(tokens, contents);
+
+  // assert
+  expect(filtered).toEqual(contents);
 });

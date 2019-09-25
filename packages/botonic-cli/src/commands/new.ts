@@ -1,6 +1,9 @@
 import { Command } from '@oclif/command'
-import * as colors from 'colors'
+
+import { resolve, join } from 'path'
+import { copySync, moveSync } from 'fs-extra'
 import { prompt } from 'inquirer'
+import * as colors from 'colors'
 
 import { BotonicAPIService } from '../botonicAPIService'
 import { track } from '../utils'
@@ -8,7 +11,6 @@ import { track } from '../utils'
 const util = require('util')
 const ora = require('ora')
 const exec = util.promisify(require('child_process').exec)
-const fs = require('fs-extra')
 
 export default class Run extends Command {
   static description = 'Create a new Botonic project'
@@ -94,17 +96,14 @@ Creating...
         return
       }
     }
-    let templatePath = `${__dirname}/../../templates/${template}`
+
+    let botPath = resolve(template)
+    let templatePath = join(__dirname, '..', '..', 'templates', template)
     let spinner = new ora({
       text: 'Copying files...',
       spinner: 'bouncingBar'
     }).start()
-    try {
-      await fs.copy(`${templatePath}`, `${args.name}`)
-    } catch (err) {
-      console.log(colors.red(err))
-      return
-    }
+    copySync(templatePath, args.name)
     spinner.succeed()
     process.chdir(args.name)
     spinner = new ora({
@@ -116,12 +115,7 @@ Creating...
     spinner.succeed()
     await this.botonicApiService.buildIfChanged(false)
     this.botonicApiService.beforeExit()
-    try {
-      await fs.move('../.botonic.json', './.botonic.json')
-    } catch (err) {
-      console.log(colors.red(err))
-      return
-    }
+    moveSync(join('..', '.botonic.json'), join(process.cwd(), '.botonic.json'))
     let cd_cmd = colors.bold(`cd ${args.name}`)
     let run_cmd = colors.bold('botonic serve')
     let deploy_cmd = colors.bold('botonic deploy')
