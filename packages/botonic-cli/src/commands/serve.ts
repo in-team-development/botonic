@@ -3,7 +3,7 @@ import { Command, flags } from '@oclif/command'
 import { track } from '../utils'
 import * as colors from 'colors'
 
-import { spawn } from 'child_process'
+import { spawn, exec } from 'child_process'
 
 export default class Run extends Command {
   static description = 'Serve your bot in your localhost'
@@ -23,17 +23,8 @@ export default class Run extends Command {
     const { args, flags } = this.parse(Run)
 
     try {
-      const serve = spawn('npm', ['run', 'start'])
+      exec('npm run start'])
       console.log(colors.blue('\nServing Botonic...'))
-      serve.stdout.on('data', out => {
-        console.log(`${out}`)
-      })
-      serve.stderr.on('data', stderr => {
-        console.log(colors.red(`${stderr}`))
-      })
-      serve.on('close', code => {
-        console.log(colors.red(`child process exited with code ${code}`))
-      })
     } catch (e) {
       console.log(e)
     }

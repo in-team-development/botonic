@@ -10,7 +10,6 @@ import { sleep, track } from '../utils'
 
 const fs = require('fs-extra')
 const ora = require('ora')
-const zip = require('bestzip')
 
 let force = false
 let npmCommand: string | undefined
@@ -54,7 +53,9 @@ Uploading...
     if (!this.botonicApiService.oauth) await this.signupFlow()
     else if (botName) {
       await this.deployBotFromFlag(botName)
-    } else await this.deployBotFlow()
+    } else {
+      await this.deployBotFlow()
+    }
   }
 
   async deployBotFromFlag(botName: string) {
@@ -187,7 +188,7 @@ Uploading...
     let nextBots = resp.data.next
     let bots = resp.data.results
     if (nextBots) {
-      let new_bots = await this.botonicApiService.getMoreBots(bots, nextBots)
+      await this.botonicApiService.getMoreBots(bots, nextBots)
     }
     if (!bots.length) {
       return this.createNewBot()
@@ -346,11 +347,7 @@ Uploading...
 
   async deploy() {
     try {
-      removeSync(BOTONIC_BUNDLE_FILE)
-    } catch(err) {
-      console.log(colors.red(err))
-    }
-    this.botonicApiService.beforeExit()
+      this.botonicApiService.beforeExit()
       let build_out = await this.botonicApiService.buildIfChanged(
         force,
         npmCommand
@@ -364,6 +361,9 @@ Uploading...
       await this.deployBundle()
       await this.displayDeployResults()
     } catch (e) {
+      console.log(
+        colors.red(e)
+      )
     } finally {
       removeSync(BOTONIC_BUNDLE_FILE)
       removeSync('tmp')
