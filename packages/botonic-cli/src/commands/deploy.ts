@@ -5,14 +5,14 @@ import { join } from 'path'
 import { copySync, removeSync } from 'fs-extra'
 import { zip } from 'zip-a-folder'
 
-const fs = require('fs')
+import { BotonicAPIService } from '../botonicAPIService'
+import { sleep, track } from '../utils'
+
+const fs = require('fs-extra')
 const ora = require('ora')
 
-import { BotonicAPIService } from '../botonicAPIService'
-import { track, sleep } from '../utils'
-
-var force = false
-var npmCommand: string | undefined
+let force = false
+let npmCommand: string | undefined
 const BOTONIC_BUNDLE_FILE = 'botonic_bundle.zip'
 
 export default class Run extends Command {
@@ -40,10 +40,10 @@ Uploading...
 
   static args = [{ name: 'bot_name' }]
 
-  private botonicApiService: BotonicAPIService = new BotonicAPIService()
+  private readonly botonicApiService: BotonicAPIService = new BotonicAPIService()
 
   async run() {
-    const { args, flags } = this.parse(Run)
+    const { flags } = this.parse(Run)
     track('Deployed Botonic CLI')
 
     force = flags.force ? flags.force : false
@@ -52,8 +52,10 @@ Uploading...
 
     if (!this.botonicApiService.oauth) await this.signupFlow()
     else if (botName) {
-      this.deployBotFromFlag(botName)
-    } else await this.deployBotFlow()
+      await this.deployBotFromFlag(botName)
+    } else {
+      await this.deployBotFlow()
+    }
   }
 
   async deployBotFromFlag(botName: string) {
@@ -64,13 +66,13 @@ Uploading...
       await this.botonicApiService.getMoreBots(bots, nextBots)
     }
     let bot = bots.filter(b => b.name === botName)[0]
-    if (bot == undefined) {
+    if (bot) {
+      this.botonicApiService.setCurrentBot(bot)
+      await this.deploy()
+    } else {
       console.log(colors.red(`Bot ${botName} doesn't exist.`))
       console.log('\nThese are the available options:')
       bots.map(b => console.log(` > ${b.name}`))
-    } else {
-      this.botonicApiService.setCurrentBot(bot)
-      this.deploy()
     }
   }
 
@@ -85,11 +87,10 @@ Uploading...
         name: 'signupConfirmation',
         message:
           'You need to login before deploying your bot.\nDo you have a Hubtype account already?',
-        choices: choices
+        choices
       }
     ]).then((inp: any) => {
-      if (inp.signupConfirmation == choices[1]) return this.askLogin()
-      else return this.askSignup()
+      return inp.signupConfirmation === choices[1] ? this.askLogin() : this.askSignup()
     })
   }
 
@@ -122,8 +123,9 @@ Uploading...
   }
 
   async deployBotFlow() {
-    if (!this.botonicApiService.bot) return this.newBotFlow()
-    else {
+    if (!this.botonicApiService.bot) {
+      return this.newBotFlow()
+    } else {
       let resp = await this.botonicApiService.getBots()
       let nextBots = resp.data.next
       let bots = resp.data.results
@@ -131,10 +133,8 @@ Uploading...
         await this.botonicApiService.getMoreBots(bots, nextBots)
       }
       // Show the current bot in credentials at top of the list
-      let first_id = this.botonicApiService.bot.id
-      bots.sort(function(x, y) {
-        return x.id == first_id ? -1 : y.id == first_id ? 1 : 0
-      })
+      let firstId = this.botonicApiService.bot.id
+      bots.sort((x, y) => x.id === firstId ? -1 : y.id === firstId ? 1 : 0)
       return this.selectExistentBot(bots)
     }
   }
@@ -188,7 +188,7 @@ Uploading...
     let nextBots = resp.data.next
     let bots = resp.data.results
     if (nextBots) {
-      let new_bots = await this.botonicApiService.getMoreBots(bots, nextBots)
+      await this.botonicApiService.getMoreBots(bots, nextBots)
     }
     if (!bots.length) {
       return this.createNewBot()
@@ -276,6 +276,7 @@ Uploading...
         )
       )
       track('Deploy Botonic Zip Error')
+      removeSync(BOTONIC_BUNDLE_FILE)
       return
     }
   }
@@ -286,7 +287,7 @@ Uploading...
       spinner: 'bouncingBar'
     }).start()
     try {
-      var deploy = await this.botonicApiService.deployBot(
+      let deploy = await this.botonicApiService.deployBot(
         join(process.cwd(), BOTONIC_BUNDLE_FILE),
         force
       )
@@ -313,6 +314,7 @@ Uploading...
             console.log(colors.red('There was a problem in the deploy:'))
             console.log(deploy_status.data.error)
             track('Deploy Botonic Error', { error: deploy_status.data.error })
+            removeSync(BOTONIC_BUNDLE_FILE)
             return
           }
         }
@@ -322,6 +324,7 @@ Uploading...
       console.log(colors.red('There was a problem in the deploy:'))
       console.log(err)
       track('Deploy Botonic Error', { error: err })
+      removeSync(BOTONIC_BUNDLE_FILE)
       return
     }
   }
@@ -334,7 +337,7 @@ Uploading...
         let links = `Now, you can integrate a channel in:\nhttps://app.hubtype.com/bots/${this.botonicApiService.bot.id}/integrations?access_token=${this.botonicApiService.oauth.access_token}`
         console.log(links)
       } else {
-        this.displayProviders(providers)
+        await this.displayProviders(providers)
       }
     } catch (e) {
       track('Deploy Botonic Provider Error', { error: e })
@@ -344,6 +347,7 @@ Uploading...
 
   async deploy() {
     try {
+      this.botonicApiService.beforeExit()
       let build_out = await this.botonicApiService.buildIfChanged(
         force,
         npmCommand
@@ -357,6 +361,9 @@ Uploading...
       await this.deployBundle()
       await this.displayDeployResults()
     } catch (e) {
+      console.log(
+        colors.red(e)
+      )
     } finally {
       removeSync(BOTONIC_BUNDLE_FILE)
       removeSync('tmp')

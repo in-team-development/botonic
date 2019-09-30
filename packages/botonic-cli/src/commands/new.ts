@@ -1,4 +1,5 @@
 import { Command } from '@oclif/command'
+
 import { resolve, join } from 'path'
 import { copySync, moveSync } from 'fs-extra'
 import { prompt } from 'inquirer'
@@ -71,7 +72,7 @@ Creating...
 
   async run() {
     track('Created Botonic Bot CLI')
-    const { args, flags } = this.parse(Run)
+    const { args } = this.parse(Run)
     let template = ''
     if (!args.templateName) {
       await this.selectBotName().then((resp: any) => {
@@ -86,15 +87,16 @@ Creating...
       if (botExists.length) {
         template = args.templateName
       } else {
-        let template_names = this.templates.map((t: any) => t.name)
+        const templateNames = this.templates.map(t => t.name)
         console.log(
           colors.red(
-            `Template ${args.templateName} does not exist, please choose one of ${template_names}.`
+            `Template ${args.templateName} does not exist, please choose one of ${templateNames}.`
           )
         )
         return
       }
     }
+
     let botPath = resolve(template)
     let templatePath = join(__dirname, '..', '..', 'templates', template)
     let spinner = new ora({
